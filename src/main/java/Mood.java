@@ -29,6 +29,11 @@ public class Mood {
         this.notes = notes;
     }
 
+    public Mood(String moodName, String moodNotes) {
+        this.name = moodName;
+        this.notes = moodNotes;
+    }
+
     public String getName() {
         return name;
     }
