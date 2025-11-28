@@ -1,3 +1,6 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -28,13 +31,17 @@ public class MoodTracker {
                 case "d":
                     deleteMoodOptions();
                     continue;
-                case "e": 	//add code to edit mood
+                case "e":
+                    editMoodOption();
                     continue;
-                case "s": 	//add code to search mood
+                case "s":
+                    searchMoodsOptions();
                     continue;
-                case "M": 	//add code to get all moods
+                case "M":
+                    getMoods();
                     continue;
-                case "w": 	//add code to write mood to a file
+                case "w":
+                    writeToFile();
                     continue;
                 case "Exit":
                     System.out.println("Thank you for using the MoodTracker. Goodbye!");
@@ -54,8 +61,10 @@ public class MoodTracker {
                 Mood moodPropsFromUser = getMoodPropsFromUser(moodName);
                 System.out.println("Add notes about this mood");
                 String moodNotes = scanner.nextLine();
-                if(!moodNotes.strip().equalsIgnoreCase(""))
+                if(!moodNotes.strip().equalsIgnoreCase("")){
                     moodPropsFromUser.setNotes(moodNotes);
+                    moodToAdd = moodPropsFromUser;
+                }
             } catch (DateTimeParseException dfe) {
                 System.out.println("Incorrect format of date or time. Cannot create mood.\n");
                 return;
@@ -74,7 +83,7 @@ public class MoodTracker {
             if(isValid) {
                 moodsList.add(moodToAdd);
                 System.out.println("The mood has been added to the tracker");
-
+                System.out.println(moodsList);
             }
         } catch(InvalidMoodException ime) {
             System.out.println("The mood is not valid");
@@ -162,6 +171,103 @@ public class MoodTracker {
         }
         return removed;
     }
+    private static void editMoodOption(){
+        Mood moodToEdit = null;
+        try {
+            System.out.println("Enter the mood name");
+            String moodName = scanner.nextLine();
+            moodToEdit =  getMoodPropsFromUser(moodName);
+            System.out.println("Add new notes about this mood");
+            String moodNotes = scanner.nextLine();
+            if(moodNotes.strip().equalsIgnoreCase("")) {
+                System.out.println("No notes entered");
+            } else {
+                moodToEdit.setNotes(moodNotes);
+                boolean isMoodEdited = editMood(moodToEdit);
+                if(isMoodEdited) {
+                    System.out.println("The mood has been successfully edited");
+                } else {
+                    System.out.println("No matching mood could be found");
+                }
+            }
+        } catch (DateTimeParseException dfe) {
+            System.out.println("Incorrect format of date or time. Cannot create mood.");
+        }
+    }
+    private static boolean editMood(Mood moodToEdit) {
+        for(Mood tempMood: moodsList) {
+            if (tempMood.equals(moodToEdit)) {
+                tempMood.setNotes(moodToEdit.getNotes());
+                return true;
+            }
+        }
+        return false;
+    }
 
+    private static void getMoods(){
+        moodsList.forEach(mood -> System.out.println(mood + "\n\n"));
+    }
 
+    private static void writeToFile(){
+        try(PrintWriter writer = new PrintWriter(new FileWriter("Moods.txt"))){
+            for (Mood mood : moodsList){
+                writer.println(mood + "\n\n");
+            }
+            System.out.println("The entries are written to a file.");
+        }
+        catch(IOException ex){
+            System.out.println("Error writing moods to a file.");
+        }
+    }
+    private static void searchMoodsOptions(){
+        System.out.println("Enter '1' to search for all moods by date\n"+
+                "Enter '2' to search for a specific mood");
+        String searchVariant = scanner.nextLine();
+        if(searchVariant.equals("1")) {
+            try {
+                System.out.println("Input the date in MM/dd/yyyy format:");
+                String moodDateStr = scanner.nextLine();
+                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+                LocalDate moodDate = LocalDate.parse(moodDateStr, dateFormatter);
+                searchMoods(moodDate);
+            } catch (DateTimeParseException dfe) {
+                System.out.println("Incorrect format of date. Cannot search mood.");
+            }
+        } else if (searchVariant.equals("2")) {
+            try {
+                System.out.println("Enter the mood name");
+                String moodName = scanner.nextLine();
+                Mood mood = getMoodPropsFromUser(moodName);
+                searchMood(mood);
+            } catch (DateTimeParseException dfe) {
+                System.out.println("Incorrect format of date or time. Cannot search mood.");
+            }
+        }
+    }
+    public static void searchMoods(LocalDate moodDate) {
+        boolean found = false;
+        for(Mood tempMood: moodsList) {
+            if (tempMood.getDate().equals(moodDate)) {
+                found = true;
+                System.out.println(tempMood);
+            }
+        }
+        if(!found) {
+            System.out.println("No matching records could be found!");
+        }
+    }
+    public static void searchMood(Mood mood) {
+        boolean found = false;
+
+        for(Mood tempMood: moodsList) {
+            if (tempMood.equals(mood)) {
+                found = true;
+                System.out.println(tempMood);
+            }
+        }
+        if(!found) {
+            System.out.println("No matching records could be found!");
+        }
+    }
 }
+
